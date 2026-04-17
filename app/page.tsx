@@ -1,65 +1,93 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Upload, Trash2, TrendingUp, DollarSign, Activity } from "lucide-react"
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
+
+const chartData = [
+  { date: 'Jan', actual: 2.1, forecast: null },
+  { date: 'Feb', actual: 2.8, forecast: null },
+  { date: 'Mar', actual: 3.4, forecast: 3.4 },
+  { date: 'Apr', actual: null, forecast: 4.1 },
+]
+
+export default function PremiumAdsDashboard(){
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-950 text-white p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold">📊 Ads Analytics Dashboard</h1>
+            <p className="text-slate-400 mt-1">Premium BI style redesign</p>
+          </div>
+          <div className="flex gap-3">
+            <Input type="file" className="max-w-xs bg-slate-900 border-slate-700" />
+            <Button className="rounded-2xl"><Upload className="w-4 h-4 mr-2"/>Upload</Button>
+            <Button variant="destructive" className="rounded-2xl"><Trash2 className="w-4 h-4 mr-2"/>Clear</Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            ['Next ROI','4.12x',TrendingUp],
+            ['Trend','+0.28',Activity],
+            ['Recommended Spend','$12,500',DollarSign],
+          ].map(([title,val,Icon]:any)=>(
+            <Card key={title} className="bg-white/5 border-white/10 backdrop-blur-xl rounded-3xl">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">{title}</p>
+                  <p className="text-3xl font-bold mt-2">{val}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-white/10"><Icon className="w-6 h-6"/></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
+
+        <Card className="bg-white/5 border-white/10 backdrop-blur-xl rounded-3xl">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-semibold mb-4">ROI Forecast</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="date" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip />
+                  <Line dataKey="actual" strokeWidth={3} stroke="#3b82f6" />
+                  <Line dataKey="forecast" strokeWidth={3} strokeDasharray="6 6" stroke="#ec4899" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/5 border-white/10 backdrop-blur-xl rounded-3xl">
+          <CardContent className="p-0 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-white/10 text-slate-300">
+                <tr>
+                  {['Campaign','Geo','Spend','Clicks','ROI'].map(h=><th key={h} className="text-left p-4">{h}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {[1,2,3].map(i=>(
+                  <tr key={i} className="border-t border-white/10 hover:bg-white/5 transition">
+                    <td className="p-4">Campaign {i}</td>
+                    <td className="p-4">UA</td>
+                    <td className="p-4">$1,250</td>
+                    <td className="p-4">845</td>
+                    <td className="p-4 text-emerald-400">3.42x</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
+  )
 }
