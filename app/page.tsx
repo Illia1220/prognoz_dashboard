@@ -32,6 +32,7 @@ export default function Page() {
   const [data, setData] = useState<any[]>([])
   const [forecast, setForecast] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [forecastLoading, setForecastLoading] = useState(false)
   const [message, setMessage] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -41,6 +42,9 @@ export default function Page() {
     loadForecast()
   }, [])
 
+  // -----------------------------
+  // DATA
+  // -----------------------------
   async function fetchData() {
     try {
       const { data } = await supabase
@@ -54,16 +58,30 @@ export default function Page() {
     }
   }
 
+  // -----------------------------
+  // FORECAST (SAFE)
+  // -----------------------------
   async function loadForecast() {
+    setForecastLoading(true)
+
     try {
       const res = await fetch("https://prognoz-mab2.onrender.com/forecast")
+
+      if (!res.ok) throw new Error("Forecast API error")
+
       const json = await res.json()
       setForecast(json)
-    } catch {
+    } catch (e) {
+      console.log(e)
       setForecast(null)
     }
+
+    setForecastLoading(false)
   }
 
+  // -----------------------------
+  // UPLOAD
+  // -----------------------------
   async function uploadFile() {
     if (!file) return setMessage("Select file")
 
@@ -100,21 +118,27 @@ export default function Page() {
     setLoading(false)
   }
 
-  const chartData = (forecast?.monthly || []).map((row: any) => ({
-    date: row.date,
-    value: Number(row.roi),
-    type: "actual",
-  }))
+  // -----------------------------
+  // SAFE CHART DATA
+  // -----------------------------
+  const chartData =
+    (forecast?.monthly || [])
+      .filter((r: any) => r?.date && r?.roi !== undefined)
+      .map((row: any) => ({
+        date: row.date,
+        value: Number(row.roi) || 0,
+        type: "actual",
+      })) || []
 
-  if (forecast?.forecast_point) {
+  if (forecast?.forecast_point?.date) {
     chartData.push({
       date: forecast.forecast_point.date,
-      value: Number(forecast.forecast_point.roi),
+      value: Number(forecast.forecast_point.roi) || 0,
       type: "forecast",
     })
   }
 
-  const lastActualDate = forecast?.monthly?.at(-1)?.date
+  const lastActualDate = forecast?.monthly?.at?.(-1)?.date
   const forecastDate = forecast?.forecast_point?.date
 
   return (
@@ -133,10 +157,9 @@ export default function Page() {
             </p>
           </div>
 
-          {/* FILE UPLOAD UI */}
+          {/* FILE UPLOAD */}
           <div className="flex gap-3 items-center">
 
-            {/* hidden input */}
             <input
               ref={fileInputRef}
               id="fileInput"
@@ -146,29 +169,25 @@ export default function Page() {
               className="hidden"
             />
 
-            {/* choose file button */}
             <label
               htmlFor="fileInput"
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer transition"
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer"
             >
               Choose file
             </label>
 
-            {/* file name display */}
             <div className="min-w-[180px] px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 truncate">
               {file ? file.name : "No file selected"}
             </div>
 
-            {/* upload */}
             <button
               onClick={uploadFile}
               disabled={loading || !file}
-              className="px-4 py-2 rounded-xl bg-indigo-500/80 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition shadow-lg shadow-indigo-500/20"
+              className="px-4 py-2 rounded-xl bg-indigo-500/80 hover:bg-indigo-500 disabled:opacity-40"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
 
-            {/* clear */}
             <button
               onClick={async () => {
                 await fetch("https://prognoz-mab2.onrender.com/clear", {
@@ -176,14 +195,12 @@ export default function Page() {
                 })
 
                 setFile(null)
-
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = ""
-                }
+                if (fileInputRef.current) fileInputRef.current.value = ""
 
                 loadForecast()
+                fetchData()
               }}
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition border border-white/10"
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10"
             >
               Clear
             </button>
@@ -192,21 +209,25 @@ export default function Page() {
         </div>
       </div>
 
+      {/* MESSAGE */}
+      {message && (
+        <div className="max-w-6xl mx-auto px-6 pt-4 text-xs text-white/60">
+          {message}
+        </div>
+      )}
+
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
 
         {/* KPI */}
-        {forecast && (
+        {forecast && !forecastLoading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               { label: "Next ROI", value: forecast.next_month_roi?.toFixed(2) },
               { label: "Trend", value: forecast.roi_trend?.toFixed(4) },
               { label: "Recommended Spend", value: forecast.recommended_spend?.toFixed(2) },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="rounded-2xl p-6 bg-white/5 border border-white/10 backdrop-blur-xl shadow-lg"
-              >
+              <div key={i} className="rounded-2xl p-6 bg-white/5 border border-white/10">
                 <p className="text-xs text-white/50">{item.label}</p>
                 <p className="text-3xl font-semibold mt-2">{item.value}</p>
               </div>
@@ -214,31 +235,23 @@ export default function Page() {
           </div>
         )}
 
+        {/* LOADING STATE */}
+        {forecastLoading && (
+          <div className="text-white/40 text-sm">Loading forecast...</div>
+        )}
+
         {/* CHART */}
         {forecast && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-lg">
-
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-semibold">ROI Forecast</h2>
-              <span className="text-xs text-white/40">monthly trend</span>
-            </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
 
             <ResponsiveContainer width="100%" height={360}>
               <LineChart data={chartData}>
 
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis dataKey="date" tickFormatter={formatMonth} />
+                <YAxis />
 
-                <XAxis dataKey="date" tickFormatter={formatMonth} stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "12px",
-                  }}
-                />
-
+                <Tooltip />
                 <Legend />
 
                 {lastActualDate && forecastDate && (
@@ -248,12 +261,7 @@ export default function Page() {
                     fill="#8b5cf6"
                     fillOpacity={0.15}
                   >
-                    <Label
-                      value="Forecast"
-                      position="insideTopRight"
-                      fill="#a78bfa"
-                      fontSize={12}
-                    />
+                    <Label value="Forecast" fill="#a78bfa" />
                   </ReferenceArea>
                 )}
 
@@ -262,18 +270,6 @@ export default function Page() {
                   dataKey="value"
                   stroke="#6366f1"
                   strokeWidth={3}
-                  dot={(props: any) => {
-                    const type = props.payload?.type
-
-                    return (
-                      <circle
-                        cx={props.cx}
-                        cy={props.cy}
-                        r={4}
-                        fill={type === "forecast" ? "#a78bfa" : "#6366f1"}
-                      />
-                    )
-                  }}
                 />
 
               </LineChart>
@@ -283,7 +279,7 @@ export default function Page() {
         )}
 
         {/* TABLE */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+        <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
 
           <div className="px-6 py-4 border-b border-white/10 flex justify-between">
             <h2 className="font-semibold">Campaigns</h2>
@@ -302,16 +298,16 @@ export default function Page() {
 
               <tbody className="divide-y divide-white/5">
                 {data.map((row) => (
-                  <tr key={row.id} className="hover:bg-white/5 transition">
-                    <td className="px-4 py-3 font-medium">{row.campaign}</td>
+                  <tr key={row.id} className="hover:bg-white/5">
+                    <td className="px-4 py-3">{row.campaign}</td>
                     <td className="px-4 py-3 text-white/60">{row.geo}</td>
                     <td className="px-4 py-3 text-white/60">{formatMonth(row.date)}</td>
                     <td className="px-4 py-3">{row.spend}</td>
                     <td className="px-4 py-3">{row.clicks}</td>
                     <td className="px-4 py-3">{row.impressions}</td>
-                    <td className="px-4 py-3 text-white/70">{Number(row.ctr)?.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-white/70">{Number(row.cpa)?.toFixed(2)}</td>
-                    <td className="px-4 py-3 font-semibold text-indigo-400">
+                    <td className="px-4 py-3">{Number(row.ctr)?.toFixed(2)}</td>
+                    <td className="px-4 py-3">{Number(row.cpa)?.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-indigo-400 font-semibold">
                       {Number(row.roi)?.toFixed(2)}
                     </td>
                   </tr>
