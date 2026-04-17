@@ -42,9 +42,6 @@ export default function Page() {
     loadForecast()
   }, [])
 
-  // -----------------------------
-  // DATA
-  // -----------------------------
   async function fetchData() {
     try {
       const { data } = await supabase
@@ -58,9 +55,6 @@ export default function Page() {
     }
   }
 
-  // -----------------------------
-  // FORECAST (SAFE)
-  // -----------------------------
   async function loadForecast() {
     setForecastLoading(true)
 
@@ -79,9 +73,6 @@ export default function Page() {
     setForecastLoading(false)
   }
 
-  // -----------------------------
-  // UPLOAD
-  // -----------------------------
   async function uploadFile() {
     if (!file) return setMessage("Select file")
 
@@ -118,9 +109,6 @@ export default function Page() {
     setLoading(false)
   }
 
-  // -----------------------------
-  // SAFE CHART DATA
-  // -----------------------------
   const chartData =
     (forecast?.monthly || [])
       .filter((r: any) => r?.date && r?.roi !== undefined)
@@ -157,22 +145,16 @@ export default function Page() {
             </p>
           </div>
 
-          {/* FILE UPLOAD */}
           <div className="flex gap-3 items-center">
-
             <input
               ref={fileInputRef}
-              id="fileInput"
               type="file"
               accept=".csv"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
             />
 
-            <label
-              htmlFor="fileInput"
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer"
-            >
+            <label className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer">
               Choose file
             </label>
 
@@ -204,19 +186,16 @@ export default function Page() {
             >
               Clear
             </button>
-
           </div>
         </div>
       </div>
 
-      {/* MESSAGE */}
       {message && (
         <div className="max-w-6xl mx-auto px-6 pt-4 text-xs text-white/60">
           {message}
         </div>
       )}
 
-      {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
 
         {/* KPI */}
@@ -235,7 +214,6 @@ export default function Page() {
           </div>
         )}
 
-        {/* LOADING STATE */}
         {forecastLoading && (
           <div className="text-white/40 text-sm">Loading forecast...</div>
         )}
@@ -243,6 +221,11 @@ export default function Page() {
         {/* CHART */}
         {forecast && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+
+            {/* 👇 ДОБАВЛЕН ЗАГОЛОВОК */}
+            <h2 className="text-lg font-semibold mb-4">
+              ROI Forecast Chart
+            </h2>
 
             <ResponsiveContainer width="100%" height={360}>
               <LineChart data={chartData}>
@@ -280,7 +263,6 @@ export default function Page() {
 
         {/* TABLE */}
         <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-
           <div className="px-6 py-4 border-b border-white/10 flex justify-between">
             <h2 className="font-semibold">Campaigns</h2>
             <p className="text-xs text-white/40">{data.length} records</p>
@@ -313,11 +295,10 @@ export default function Page() {
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
   )
