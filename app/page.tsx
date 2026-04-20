@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import {
@@ -20,7 +19,6 @@ import {
 // -----------------------------
 function formatMonth(dateStr: string) {
   const date = new Date(dateStr)
-
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     year: "numeric",
@@ -34,16 +32,74 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
   const [forecastLoading, setForecastLoading] = useState(false)
   const [message, setMessage] = useState("")
-
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // ==================== НОВАЯ ФУНКЦИЯ ПРОГРЕССА ====================
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [progress, setProgress] = useState(0)
+  const [loadingText, setLoadingText] = useState("Инициализация...")
+
+  // -----------------------------
+  // INITIAL LOADING WITH PROGRESS BAR
+  // -----------------------------
   useEffect(() => {
-    fetchData()
-    loadForecast()
+    const loadWithProgress = async () => {
+      setInitialLoading(true)
+      setProgress(0)
+      setLoadingText("Подключение...")
+
+      try {
+        // Этап 1
+        setLoadingText("Загрузка данных кампаний...")
+        setProgress(30)
+
+        const { data: adsData } = await supabase
+          .from("ads_data")
+          .select("*")
+          .order("created_at", { ascending: true })
+
+        setData(adsData || [])
+
+        // Этап 2
+        setLoadingText("Загрузка прогноза...")
+        setProgress(65)
+
+        const res = await fetch("https://prognoz-mab2.onrender.com/forecast")
+        
+        if (res.ok) {
+          const json = await res.json()
+          setForecast(json)
+        } else {
+          console.warn("Forecast API не ответил")
+        }
+
+        // Этап 3
+        setLoadingText("Подготовка интерфейса...")
+        setProgress(90)
+
+        // Небольшая пауза для плавности
+        await new Promise(resolve => setTimeout(resolve, 400))
+
+        setProgress(100)
+        setLoadingText("Готово!")
+
+        // Плавно скрываем экран загрузки
+        setTimeout(() => {
+          setInitialLoading(false)
+        }, 500)
+
+      } catch (error) {
+        console.error("Ошибка загрузки:", error)
+        setProgress(100)
+        setTimeout(() => setInitialLoading(false), 600)
+      }
+    }
+
+    loadWithProgress()
   }, [])
 
   // -----------------------------
-  // DATA
+  // DATA (оригинальная функция)
   // -----------------------------
   async function fetchData() {
     try {
@@ -51,7 +107,6 @@ export default function Page() {
         .from("ads_data")
         .select("*")
         .order("created_at", { ascending: true })
-
       setData(data || [])
     } catch {
       setData([])
@@ -59,53 +114,42 @@ export default function Page() {
   }
 
   // -----------------------------
-  // FORECAST (SAFE)
+  // FORECAST (SAFE) — оригинальная
   // -----------------------------
   async function loadForecast() {
     setForecastLoading(true)
-
     try {
       const res = await fetch("https://prognoz-mab2.onrender.com/forecast")
-
       if (!res.ok) throw new Error("Forecast API error")
-
       const json = await res.json()
       setForecast(json)
     } catch (e) {
       console.log(e)
       setForecast(null)
     }
-
     setForecastLoading(false)
   }
 
   // -----------------------------
-  // UPLOAD
+  // UPLOAD — оригинальная
   // -----------------------------
   async function uploadFile() {
     if (!file) return setMessage("Select file")
-
     setLoading(true)
-
     const form = new FormData()
     form.append("file", file)
-
     try {
       const res = await fetch("https://prognoz-mab2.onrender.com/upload", {
         method: "POST",
         body: form,
       })
-
       const json = await res.json()
-
       if (json.status === "success") {
         setMessage(`Uploaded ${json.rows_inserted}`)
         setFile(null)
-
         if (fileInputRef.current) {
           fileInputRef.current.value = ""
         }
-
         fetchData()
         loadForecast()
       } else {
@@ -114,12 +158,11 @@ export default function Page() {
     } catch {
       setMessage("Server error")
     }
-
     setLoading(false)
   }
 
   // -----------------------------
-  // SAFE CHART DATA
+  // SAFE CHART DATA — оригинальная
   // -----------------------------
   const chartData =
     (forecast?.monthly || [])
@@ -143,11 +186,35 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-[#0b0f1a] text-white">
+      {/* ====================== PROGRESS OVERLAY ====================== */}
+      {initialLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0b0f1a]">
+          <div className="w-full max-w-md px-8 text-center">
+            <div className="mb-8">
+              <div className="w-16 h-16 mx-auto border-4 border-white/10 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
 
-      {/* TOP BAR */}
+            <h2 className="text-2xl font-semibold mb-2 tracking-tight">
+              Загрузка дашборда
+            </h2>
+            <p className="text-white/60 mb-8 text-sm">{loadingText}</p>
+
+            {/* Progress Bar */}
+            <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <p className="text-xs font-mono text-white/50">{progress}%</p>
+          </div>
+        </div>
+      )}
+
+      {/* TOP BAR — полностью оригинальный */}
       <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/5 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
           <div>
             <h1 className="text-lg font-semibold tracking-tight">
               Ads Analytics
@@ -159,7 +226,6 @@ export default function Page() {
 
           {/* FILE UPLOAD */}
           <div className="flex gap-3 items-center">
-
             <input
               ref={fileInputRef}
               id="fileInput"
@@ -168,18 +234,15 @@ export default function Page() {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
             />
-
             <label
               htmlFor="fileInput"
               className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer"
             >
               Choose file
             </label>
-
             <div className="min-w-[180px] px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 truncate">
               {file ? file.name : "No file selected"}
             </div>
-
             <button
               onClick={uploadFile}
               disabled={loading || !file}
@@ -187,17 +250,13 @@ export default function Page() {
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
-
-
             <button
               onClick={() => {
                 if (forecastLoading) return
-
                 if (!forecast?.monthly?.length) {
                   setMessage("⚠️ First upload data to generate forecast")
                   return
                 }
-
                 window.open("https://prognoz-mab2.onrender.com/export", "_blank")
               }}
               disabled={forecastLoading}
@@ -205,16 +264,13 @@ export default function Page() {
             >
               {forecastLoading ? "Preparing..." : "Export Excel"}
             </button>
-
             <button
               onClick={async () => {
                 await fetch("https://prognoz-mab2.onrender.com/clear", {
                   method: "POST",
                 })
-
                 setFile(null)
                 if (fileInputRef.current) fileInputRef.current.value = ""
-
                 loadForecast()
                 fetchData()
               }}
@@ -222,7 +278,6 @@ export default function Page() {
             >
               Clear
             </button>
-
           </div>
         </div>
       </div>
@@ -236,7 +291,6 @@ export default function Page() {
 
       {/* CONTENT */}
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-
         {/* KPI */}
         {forecast && !forecastLoading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -261,23 +315,16 @@ export default function Page() {
         {/* CHART */}
         {forecast && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-
-
-            {/* 👇 ДОБАВЛЕН ЗАГОЛОВОК */}
             <h2 className="text-lg font-semibold mb-4">
               ROI Forecast Chart
             </h2>
-
             <ResponsiveContainer width="100%" height={360}>
               <LineChart data={chartData}>
-
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="date" tickFormatter={formatMonth} />
                 <YAxis />
-
                 <Tooltip />
                 <Legend />
-
                 {lastActualDate && forecastDate && (
                   <ReferenceArea
                     x1={lastActualDate}
@@ -288,28 +335,23 @@ export default function Page() {
                     <Label value="Forecast" fill="#a78bfa" />
                   </ReferenceArea>
                 )}
-
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke="#6366f1"
                   strokeWidth={3}
                 />
-
               </LineChart>
             </ResponsiveContainer>
-
           </div>
         )}
 
         {/* TABLE */}
         <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-
           <div className="px-6 py-4 border-b border-white/10 flex justify-between">
             <h2 className="font-semibold">Campaigns</h2>
             <p className="text-xs text-white/40">{data.length} records</p>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-white/50 text-xs uppercase">
@@ -319,7 +361,6 @@ export default function Page() {
                   ))}
                 </tr>
               </thead>
-
               <tbody className="divide-y divide-white/5">
                 {data.map((row) => (
                   <tr key={row.id} className="hover:bg-white/5">
@@ -337,11 +378,9 @@ export default function Page() {
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         </div>
-
       </div>
     </div>
   )
