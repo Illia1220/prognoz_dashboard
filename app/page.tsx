@@ -188,6 +188,24 @@ export default function Page() {
               {loading ? "Uploading..." : "Upload"}
             </button>
 
+
+            <button
+              onClick={() => {
+                if (forecastLoading) return
+
+                if (!forecast?.monthly?.length) {
+                  setMessage("⚠️ First upload data to generate forecast")
+                  return
+                }
+
+                window.open("https://prognoz-mab2.onrender.com/export", "_blank")
+              }}
+              disabled={forecastLoading}
+              className="px-4 py-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {forecastLoading ? "Preparing..." : "Export Excel"}
+            </button>
+
             <button
               onClick={async () => {
                 await fetch("https://prognoz-mab2.onrender.com/clear", {
