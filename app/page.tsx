@@ -303,7 +303,7 @@ export default function Page() {
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="px-3 py-2 rounded-xl bg-gray-200 dark:bg-white/10 hover:bg-gray-300 dark:hover:bg-white/15 text-sm"
             >
-              {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
             </button>
 
 
