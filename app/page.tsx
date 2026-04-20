@@ -186,20 +186,24 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-[#0b0f1a] text-white">
+
       {/* ====================== PROGRESS OVERLAY ====================== */}
       {initialLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0b0f1a]">
-          <div className="w-full max-w-md px-8 text-center">
+          <div className="w-full max-w-md px-6 md:px-8 text-center">
+
             <div className="mb-8">
-              <div className="w-16 h-16 mx-auto border-4 border-white/10 border-t-indigo-500 rounded-full animate-spin" />
+              <div className="w-14 h-14 md:w-16 md:h-16 mx-auto border-4 border-white/10 border-t-indigo-500 rounded-full animate-spin" />
             </div>
 
-            <h2 className="text-2xl font-semibold mb-2 tracking-tight">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2 tracking-tight">
               Загрузка дашборда
             </h2>
-            <p className="text-white/60 mb-8 text-sm">{loadingText}</p>
 
-            {/* Progress Bar */}
+            <p className="text-white/60 mb-6 md:mb-8 text-sm">
+              {loadingText}
+            </p>
+
             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
               <div
                 className="h-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all duration-300 ease-out"
@@ -212,11 +216,12 @@ export default function Page() {
         </div>
       )}
 
-      {/* TOP BAR — полностью оригинальный */}
+      {/* TOP BAR */}
       <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/5 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4 lg:justify-between lg:items-center">
+
           <div>
-            <h1 className="text-lg font-semibold tracking-tight">
+            <h1 className="text-base md:text-lg font-semibold tracking-tight">
               Ads Analytics
             </h1>
             <p className="text-xs text-white/50">
@@ -225,7 +230,8 @@ export default function Page() {
           </div>
 
           {/* FILE UPLOAD */}
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-2 md:gap-3 items-center">
+
             <input
               ref={fileInputRef}
               id="fileInput"
@@ -234,22 +240,26 @@ export default function Page() {
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
             />
+
             <label
               htmlFor="fileInput"
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer"
+              className="px-3 md:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 cursor-pointer text-sm"
             >
               Choose file
             </label>
-            <div className="min-w-[180px] px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 truncate">
+
+            <div className="min-w-[140px] md:min-w-[180px] px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white/60 truncate">
               {file ? file.name : "No file selected"}
             </div>
+
             <button
               onClick={uploadFile}
               disabled={loading || !file}
-              className="px-4 py-2 rounded-xl bg-indigo-500/80 hover:bg-indigo-500 disabled:opacity-40"
+              className="px-3 md:px-4 py-2 rounded-xl bg-indigo-500/80 hover:bg-indigo-500 disabled:opacity-40 text-sm"
             >
               {loading ? "Uploading..." : "Upload"}
             </button>
+
             <button
               onClick={() => {
                 if (forecastLoading) return
@@ -260,10 +270,11 @@ export default function Page() {
                 window.open("https://prognoz-mab2.onrender.com/export", "_blank")
               }}
               disabled={forecastLoading}
-              className="px-4 py-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 md:px-4 py-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-sm"
             >
               {forecastLoading ? "Preparing..." : "Export Excel"}
             </button>
+
             <button
               onClick={async () => {
                 await fetch("https://prognoz-mab2.onrender.com/clear", {
@@ -274,57 +285,70 @@ export default function Page() {
                 loadForecast()
                 fetchData()
               }}
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10"
+              className="px-3 md:px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-sm"
             >
               Clear
             </button>
+
           </div>
         </div>
       </div>
 
       {/* MESSAGE */}
       {message && (
-        <div className="max-w-6xl mx-auto px-6 pt-4 text-xs text-white/60">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 pt-4 text-xs text-white/60">
           {message}
         </div>
       )}
 
       {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+
         {/* KPI */}
         {forecast && !forecastLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+
             {[
               { label: "Next ROI", value: forecast.next_month_roi?.toFixed(2) },
               { label: "Trend", value: forecast.roi_trend?.toFixed(4) },
               { label: "Recommended Spend", value: forecast.recommended_spend?.toFixed(2) },
             ].map((item, i) => (
-              <div key={i} className="rounded-2xl p-6 bg-white/5 border border-white/10">
+              <div
+                key={i}
+                className="rounded-2xl p-4 md:p-6 bg-white/5 border border-white/10"
+              >
                 <p className="text-xs text-white/50">{item.label}</p>
-                <p className="text-3xl font-semibold mt-2">{item.value}</p>
+                <p className="text-2xl md:text-3xl font-semibold mt-2">
+                  {item.value}
+                </p>
               </div>
             ))}
+
           </div>
         )}
 
         {/* LOADING STATE */}
         {forecastLoading && (
-          <div className="text-white/40 text-sm">Loading forecast...</div>
+          <div className="text-white/40 text-sm">
+            Loading forecast...
+          </div>
         )}
 
         {/* CHART */}
         {forecast && (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold mb-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-6">
+            <h2 className="text-base md:text-lg font-semibold mb-4">
               ROI Forecast Chart
             </h2>
-            <ResponsiveContainer width="100%" height={360}>
+
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
                 <XAxis dataKey="date" tickFormatter={formatMonth} />
                 <YAxis />
                 <Tooltip />
                 <Legend />
+
                 {lastActualDate && forecastDate && (
                   <ReferenceArea
                     x1={lastActualDate}
@@ -335,6 +359,7 @@ export default function Page() {
                     <Label value="Forecast" fill="#a78bfa" />
                   </ReferenceArea>
                 )}
+
                 <Line
                   type="monotone"
                   dataKey="value"
@@ -348,39 +373,54 @@ export default function Page() {
 
         {/* TABLE */}
         <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/10 flex justify-between">
-            <h2 className="font-semibold">Campaigns</h2>
-            <p className="text-xs text-white/40">{data.length} records</p>
+
+          <div className="px-4 md:px-6 py-4 border-b border-white/10 flex justify-between">
+            <h2 className="font-semibold text-sm md:text-base">
+              Campaigns
+            </h2>
+            <p className="text-xs text-white/40">
+              {data.length} records
+            </p>
           </div>
+
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs md:text-sm min-w-[900px]">
+
               <thead className="text-white/50 text-xs uppercase">
                 <tr>
                   {["Campaign","Geo","Date","Spend","Clicks","Impr","CTR","CPA","ROI"].map(h => (
-                    <th key={h} className="text-left px-4 py-3">{h}</th>
+                    <th key={h} className="text-left px-3 md:px-4 py-3">{h}</th>
                   ))}
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-white/5">
                 {data.map((row) => (
                   <tr key={row.id} className="hover:bg-white/5">
-                    <td className="px-4 py-3">{row.campaign}</td>
-                    <td className="px-4 py-3 text-white/60">{row.geo}</td>
-                    <td className="px-4 py-3 text-white/60">{formatMonth(row.date)}</td>
-                    <td className="px-4 py-3">{row.spend}</td>
-                    <td className="px-4 py-3">{row.clicks}</td>
-                    <td className="px-4 py-3">{row.impressions}</td>
-                    <td className="px-4 py-3">{Number(row.ctr)?.toFixed(2)}</td>
-                    <td className="px-4 py-3">{Number(row.cpa)?.toFixed(2)}</td>
-                    <td className="px-4 py-3 text-indigo-400 font-semibold">
+
+                    <td className="px-3 md:px-4 py-3">{row.campaign}</td>
+                    <td className="px-3 md:px-4 py-3 text-white/60">{row.geo}</td>
+                    <td className="px-3 md:px-4 py-3 text-white/60">
+                      {formatMonth(row.date)}
+                    </td>
+                    <td className="px-3 md:px-4 py-3">{row.spend}</td>
+                    <td className="px-3 md:px-4 py-3">{row.clicks}</td>
+                    <td className="px-3 md:px-4 py-3">{row.impressions}</td>
+                    <td className="px-3 md:px-4 py-3">{Number(row.ctr)?.toFixed(2)}</td>
+                    <td className="px-3 md:px-4 py-3">{Number(row.cpa)?.toFixed(2)}</td>
+                    <td className="px-3 md:px-4 py-3 text-indigo-400 font-semibold">
                       {Number(row.roi)?.toFixed(2)}
                     </td>
+
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
+
         </div>
+
       </div>
     </div>
   )
