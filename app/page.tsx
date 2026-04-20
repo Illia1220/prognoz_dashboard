@@ -62,7 +62,7 @@ export default function Page() {
         setData(adsData || [])
 
         // Этап 2
-        setLoadingText("Подключение к серверу...")
+        setLoadingText("Подключение к серверу(чуток подожди, пж)...")
         setProgress(65)
 
         const res = await fetch("https://prognoz-mab2.onrender.com/forecast")
@@ -100,7 +100,7 @@ export default function Page() {
   }, [])
 
   // -----------------------------
-  // DATA (оригинальная функция)
+  // DATA
   // -----------------------------
   async function fetchData() {
     try {
@@ -115,7 +115,7 @@ export default function Page() {
   }
 
   // -----------------------------
-  // FORECAST (SAFE) — оригинальная
+  // FORECAST (SAFE)
   // -----------------------------
   async function loadForecast() {
     setForecastLoading(true)
@@ -132,7 +132,7 @@ export default function Page() {
   }
 
   // -----------------------------
-  // UPLOAD — оригинальная
+  // UPLOAD
   // -----------------------------
   async function uploadFile() {
     if (!file) return setMessage("Select file")
@@ -163,7 +163,7 @@ export default function Page() {
   }
 
   // -----------------------------
-  // SAFE CHART DATA — оригинальная
+  // SAFE CHART DATA
   // -----------------------------
   const chartData =
     (forecast?.monthly || [])
@@ -202,7 +202,7 @@ export default function Page() {
             </div>
 
             <h2 className="text-xl md:text-2xl font-semibold mb-2 tracking-tight">
-              Загрузка дашборда
+              Загрузка страницы
             </h2>
 
             <p className="text-gray-600 dark:text-white/60 mb-6 md:mb-8 text-sm">
