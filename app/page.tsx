@@ -62,7 +62,7 @@ export default function Page() {
         setData(adsData || [])
 
         // Этап 2
-        setLoadingText("Загрузка прогноза...")
+        setLoadingText("Подключение к серверу...")
         setProgress(65)
 
         const res = await fetch("https://prognoz-mab2.onrender.com/forecast")
