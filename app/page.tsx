@@ -37,6 +37,11 @@ function formatCompactValue(value: number) {
   }).format(value)
 }
 
+function formatDelta(value: number) {
+  const sign = value > 0 ? "+" : ""
+  return `${sign}${value.toFixed(1)}%`
+}
+
 function StatPill({
   label,
   value,
@@ -72,6 +77,8 @@ export default function Page() {
   const [progress, setProgress] = useState(0)
   const [loadingText, setLoadingText] = useState("Инициализация...")
   const [mounted, setMounted] = useState(false)
+  const [search, setSearch] = useState("")
+  const [selectedGeo, setSelectedGeo] = useState("all")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -205,10 +212,30 @@ export default function Page() {
   const { theme, setTheme } = useTheme()
 
   const totalSpend = data.reduce((sum, row) => sum + (Number(row.spend) || 0), 0)
+  const totalRevenue = data.reduce((sum, row) => sum + (Number(row.revenue) || 0), 0)
   const totalClicks = data.reduce((sum, row) => sum + (Number(row.clicks) || 0), 0)
-  const avgRoi = data.length
-    ? data.reduce((sum, row) => sum + (Number(row.roi) || 0), 0) / data.length
-    : 0
+  const avgRoi = totalSpend ? totalRevenue / totalSpend : 0
+  const geos = Array.from(new Set(data.map((row) => row.geo).filter(Boolean))).sort()
+
+  const filteredData = data.filter((row) => {
+    const matchesSearch =
+      !search ||
+      String(row.campaign || "")
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    const matchesGeo = selectedGeo === "all" || row.geo === selectedGeo
+    return matchesSearch && matchesGeo
+  })
+
+  const comparison = forecast?.comparison
+  const highlights = forecast?.highlights
+  const alerts = highlights?.alerts || []
+  const topCampaigns = highlights?.top_campaigns || []
+  const riskCampaigns = highlights?.risk_campaigns || []
+  const recommendation = highlights?.recommendation || {
+    label: "Hold",
+    text: "Upload campaign data to receive recommendations.",
+  }
 
   const surfaceClass =
     "border border-black/10 bg-white/70 shadow-[0_20px_80px_rgba(15,23,42,0.08)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_30px_80px_rgba(2,6,23,0.55)]"
@@ -291,7 +318,7 @@ export default function Page() {
                     Media Buying Intelligence
                   </p>
                   <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.04em] md:text-6xl">
-                    Центр управления рекламной аналитикой.
+                    Управляй трафиком, ROI и масштабированием из одного дашборда.
                   </h2>
                   <p className={`mt-4 max-w-xl text-sm leading-6 md:text-base ${mutedText}`}>
                     Платформа для медиабаинга, где данные по кампаниям, прогноз ROI и
@@ -325,6 +352,9 @@ export default function Page() {
                   <div>
                     <p className="text-sm font-medium">Choose CSV file</p>
                     <p className={`mt-1 text-xs ${mutedText}`}>Upload fresh campaign metrics</p>
+                  </div>
+                  <div className="rounded-full bg-slate-950 px-3 py-1 text-xs text-white dark:bg-white dark:text-slate-950">
+                    Browse
                   </div>
                 </label>
 
@@ -381,6 +411,38 @@ export default function Page() {
                   {message}
                 </div>
               )}
+
+              <div className="mt-5 grid gap-3 md:grid-cols-[1fr_220px_auto]">
+                <div className="rounded-[1.5rem] border border-black/10 bg-white/65 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                  <p className={`text-xs uppercase tracking-[0.22em] ${mutedText}`}>Search campaigns</p>
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Type campaign name..."
+                    className="mt-2 w-full bg-transparent text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="rounded-[1.5rem] border border-black/10 bg-white/65 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                  <p className={`text-xs uppercase tracking-[0.22em] ${mutedText}`}>Geo filter</p>
+                  <select
+                    value={selectedGeo}
+                    onChange={(e) => setSelectedGeo(e.target.value)}
+                    className="mt-2 w-full bg-transparent text-sm outline-none"
+                  >
+                    <option value="all">All geos</option>
+                    {geos.map((geo) => (
+                      <option key={geo} value={geo}>
+                        {geo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center rounded-[1.5rem] border border-black/10 bg-white/65 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
+                  {filteredData.length} filtered rows
+                </div>
+              </div>
             </div>
           </div>
 
@@ -451,6 +513,12 @@ export default function Page() {
                 <p className="mt-2 text-lg font-medium">
                   {theme === "dark" ? "Dark cinematic workspace" : "Light editorial workspace"}
                 </p>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className={`text-xs uppercase tracking-[0.22em] ${mutedText}`}>Recommendation</p>
+                <p className="mt-2 text-2xl font-semibold">{recommendation.label}</p>
+                <p className={`mt-2 text-sm ${mutedText}`}>{recommendation.text}</p>
               </div>
             </div>
           </div>
@@ -589,6 +657,117 @@ export default function Page() {
           </div>
         </section>
 
+        <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr_0.9fr]">
+          <div className={`rounded-[2rem] p-5 md:p-6 ${surfaceClass}`}>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">
+              Alert Center
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">What needs attention</h3>
+            <div className="mt-5 space-y-3">
+              {alerts.length ? (
+                alerts.map((alert) => (
+                  <div
+                    key={alert.title}
+                    className={`rounded-[1.35rem] border px-4 py-4 ${
+                      alert.tone === "positive"
+                        ? "border-emerald-400/25 bg-emerald-500/10"
+                        : alert.tone === "warn"
+                          ? "border-amber-400/25 bg-amber-500/10"
+                          : "border-rose-400/25 bg-rose-500/10"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">{alert.title}</p>
+                    <p className={`mt-1 text-sm ${mutedText}`}>{alert.text}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[1.35rem] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+                  <p className="text-sm font-semibold">No major issues detected</p>
+                  <p className={`mt-1 text-sm ${mutedText}`}>Current dataset looks stable enough for regular monitoring.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={`rounded-[2rem] p-5 md:p-6 ${surfaceClass}`}>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">
+              Top Campaigns
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">Best ROI performers</h3>
+            <div className="mt-5 space-y-3">
+              {topCampaigns.map((campaign, index) => (
+                <div key={campaign.campaign} className="rounded-[1.35rem] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">Top {index + 1}</p>
+                      <p className="mt-2 text-lg font-semibold">{campaign.campaign}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">{formatMetric(campaign.roi)}</p>
+                      <p className={`text-xs ${mutedText}`}>ROI</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={`rounded-[2rem] p-5 md:p-6 ${surfaceClass}`}>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">
+              Risk Campaigns
+            </p>
+            <h3 className="mt-2 text-2xl font-semibold tracking-tight">Need review first</h3>
+            <div className="mt-5 space-y-3">
+              {riskCampaigns.map((campaign, index) => (
+                <div key={campaign.campaign} className="rounded-[1.35rem] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.24em] text-rose-600 dark:text-rose-300">Risk {index + 1}</p>
+                      <p className="mt-2 text-lg font-semibold">{campaign.campaign}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-semibold text-rose-600 dark:text-rose-300">{formatMetric(campaign.roi)}</p>
+                      <p className={`text-xs ${mutedText}`}>ROI</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-3">
+          {[
+            {
+              label: "ROI vs previous period",
+              value: formatDelta(Number(comparison?.roi_delta || 0)),
+              note:
+                comparison?.current_period && comparison?.previous_period
+                  ? `${formatMonth(comparison.previous_period)} to ${formatMonth(comparison.current_period)}`
+                  : "Need at least 2 periods",
+            },
+            {
+              label: "Spend vs previous period",
+              value: formatDelta(Number(comparison?.spend_delta || 0)),
+              note: "Budget movement",
+            },
+            {
+              label: "CPA vs previous period",
+              value: formatDelta(Number(comparison?.cpa_delta || 0)),
+              note: "Efficiency movement",
+            },
+          ].map((item) => (
+            <div key={item.label} className={`rounded-[2rem] p-5 md:p-6 ${surfaceClass}`}>
+              <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">
+                Period Comparison
+              </p>
+              <h3 className="mt-2 text-xl font-semibold tracking-tight">{item.label}</h3>
+              <p className="mt-5 text-4xl font-semibold tracking-tight">{item.value}</p>
+              <p className={`mt-2 text-sm ${mutedText}`}>{item.note}</p>
+            </div>
+          ))}
+        </section>
+
         <section className={`overflow-hidden rounded-[2rem] ${surfaceClass}`}>
           <div className="flex flex-col gap-3 border-b border-black/5 px-5 py-5 md:flex-row md:items-center md:justify-between md:px-6 dark:border-white/10">
             <div>
@@ -599,7 +778,7 @@ export default function Page() {
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/10">
-                {data.length} records
+                {filteredData.length} records
               </div>
               <div className={`text-sm ${mutedText}`}>Detailed table with hover focus</div>
             </div>
@@ -618,7 +797,7 @@ export default function Page() {
               </thead>
 
               <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                {data.map((row) => (
+                {filteredData.map((row) => (
                   <tr
                     key={row.id}
                     className="group bg-white/20 transition hover:bg-sky-500/[0.06] dark:bg-transparent dark:hover:bg-white/[0.04]"
