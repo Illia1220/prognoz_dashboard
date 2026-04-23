@@ -16,6 +16,43 @@ import {
   YAxis,
 } from "recharts"
 
+type AlertItem = {
+  title: string
+  text: string
+  tone: "positive" | "warn" | "negative"
+}
+
+type CampaignHighlight = {
+  campaign: string
+  roi: number
+  spend: number
+  clicks: number
+}
+
+type ForecastData = {
+  monthly?: Array<{ date: string; roi: number }>
+  forecast_point?: { date: string; roi: number } | null
+  next_month_roi?: number
+  roi_trend?: number
+  recommended_spend?: number
+  comparison?: {
+    current_period?: string | null
+    previous_period?: string | null
+    roi_delta?: number
+    spend_delta?: number
+    cpa_delta?: number
+  }
+  highlights?: {
+    alerts?: AlertItem[]
+    top_campaigns?: CampaignHighlight[]
+    risk_campaigns?: CampaignHighlight[]
+    recommendation?: {
+      label: string
+      text: string
+    }
+  }
+}
+
 function formatMonth(dateStr: string) {
   const date = new Date(dateStr)
   return new Intl.DateTimeFormat("en-US", {
@@ -69,7 +106,7 @@ function StatPill({
 export default function Page() {
   const [file, setFile] = useState<File | null>(null)
   const [data, setData] = useState<any[]>([])
-  const [forecast, setForecast] = useState<any>(null)
+  const [forecast, setForecast] = useState<ForecastData | null>(null)
   const [loading, setLoading] = useState(false)
   const [forecastLoading, setForecastLoading] = useState(false)
   const [message, setMessage] = useState("")
@@ -229,9 +266,9 @@ export default function Page() {
 
   const comparison = forecast?.comparison
   const highlights = forecast?.highlights
-  const alerts = highlights?.alerts || []
-  const topCampaigns = highlights?.top_campaigns || []
-  const riskCampaigns = highlights?.risk_campaigns || []
+  const alerts: AlertItem[] = highlights?.alerts || []
+  const topCampaigns: CampaignHighlight[] = highlights?.top_campaigns || []
+  const riskCampaigns: CampaignHighlight[] = highlights?.risk_campaigns || []
   const recommendation = highlights?.recommendation || {
     label: "Hold",
     text: "Upload campaign data to receive recommendations.",
@@ -318,7 +355,7 @@ export default function Page() {
                     Media Buying Intelligence
                   </p>
                   <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-[-0.04em] md:text-6xl">
-                    Управляй трафиком, ROI и масштабированием из одного дашборда.
+                    Центр управления рекламной аналитикой.
                   </h2>
                   <p className={`mt-4 max-w-xl text-sm leading-6 md:text-base ${mutedText}`}>
                     Платформа для медиабаинга, где данные по кампаниям, прогноз ROI и
@@ -352,9 +389,6 @@ export default function Page() {
                   <div>
                     <p className="text-sm font-medium">Choose CSV file</p>
                     <p className={`mt-1 text-xs ${mutedText}`}>Upload fresh campaign metrics</p>
-                  </div>
-                  <div className="rounded-full bg-slate-950 px-3 py-1 text-xs text-white dark:bg-white dark:text-slate-950">
-                    Browse
                   </div>
                 </label>
 
@@ -665,7 +699,7 @@ export default function Page() {
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">What needs attention</h3>
             <div className="mt-5 space-y-3">
               {alerts.length ? (
-                alerts.map((alert) => (
+                alerts.map((alert: AlertItem) => (
                   <div
                     key={alert.title}
                     className={`rounded-[1.35rem] border px-4 py-4 ${
@@ -695,7 +729,7 @@ export default function Page() {
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">Best ROI performers</h3>
             <div className="mt-5 space-y-3">
-              {topCampaigns.map((campaign, index) => (
+              {topCampaigns.map((campaign: CampaignHighlight, index: number) => (
                 <div key={campaign.campaign} className="rounded-[1.35rem] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -718,7 +752,7 @@ export default function Page() {
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight">Need review first</h3>
             <div className="mt-5 space-y-3">
-              {riskCampaigns.map((campaign, index) => (
+              {riskCampaigns.map((campaign: CampaignHighlight, index: number) => (
                 <div key={campaign.campaign} className="rounded-[1.35rem] border border-black/10 bg-white/60 px-4 py-4 dark:border-white/10 dark:bg-white/5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
