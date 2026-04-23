@@ -418,11 +418,12 @@ export default function Page() {
                     }
                     window.open("https://prognoz-mab2.onrender.com/export", "_blank")
                   }}
-                  disabled={forecastLoading}
-                  className="min-h-[72px] rounded-[1.5rem] bg-[linear-gradient(135deg,#fb923c_0%,#f97316_100%)] px-5 py-4 text-sm font-medium text-white shadow-[0_20px_50px_rgba(249,115,22,0.28)] transition hover:-translate-y-0.5 disabled:opacity-40"
+                  disabled={forecastLoading || !forecast?.monthly?.length}
+                  className="min-h-[72px] rounded-[1.5rem] bg-[linear-gradient(135deg,#22c55e_0%,#15803d_100%)] px-5 py-4 text-sm font-medium text-white shadow-[0_20px_50px_rgba(34,197,94,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_25px_60px_rgba(34,197,94,0.38)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                 >
                   {forecastLoading ? "Preparing..." : "Export Excel"}
                 </button>
+
 
                 <button
                   onClick={async () => {
