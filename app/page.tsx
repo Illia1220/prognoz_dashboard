@@ -289,11 +289,7 @@ export default function Page() {
       {initialLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 backdrop-blur-2xl">
           <div className={`w-full max-w-lg rounded-[2rem] p-8 text-center ${surfaceClass}`}>
-            <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-[conic-gradient(from_180deg_at_50%_50%,#0ea5e9,transparent,#f97316,transparent,#0ea5e9)] p-[1px]">
-              <div className="flex h-full w-full items-center justify-center rounded-full bg-white/90 dark:bg-slate-950/90">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-500 dark:border-white/10 dark:border-t-sky-400" />
-              </div>
-            </div>
+
 
             <p className="text-[11px] uppercase tracking-[0.35em] text-sky-600 dark:text-sky-300">
               Live Analytics Boot
